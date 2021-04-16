@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define APP_NAME "rocket"
+#define APP_NAME "rocketdb"
 
 typedef enum {
 	META_COMMAND_SUCCESS,
@@ -14,19 +14,17 @@ typedef enum {
 
 typedef enum {
 	STATEMENT_PREPARE_SUCCESS,
-	STATEMENT_PREPARE_UNRECOGNIZED,
-	STATEMENT_INVALID_DATABASE
+    STATEMENT_PREPARE_UNRECOGNIZED,
+    STATEMENT_PREPARE_FAILED_MALLOC,
+    STATEMENT_PREPARE_NAME_TOO_LARGE
 } statement_prepare_result;
 
 typedef enum {
-	STATEMENT_INSERT,
-	STATEMENT_SELECT
+	STATEMENT_CREATE,
+	STATEMENT_READ,
+	STATEMENT_UPDATE,
+	STATEMENT_DELETE
 } statement_type;
-
-typedef enum {
-	DATABASE_CONNECTION_VALID,
-	DATABASE_CONNECTION_INVALID
-} database_connection_status;
 
 typedef struct {
 	char* buffer;
@@ -35,14 +33,9 @@ typedef struct {
 } input_buffer;
 
 typedef struct {
-	char* name;
-	char* file_name;
-	FILE* file;
-	database_connection_status status;
-} database_connection_;
-
-typedef struct {
 	statement_type type;
+	char* database_name;
+	char* group_name;
 } statement_;
 
 input_buffer* init_input_buffer();
@@ -50,7 +43,7 @@ void input_prompt(input_buffer* input);
 void free_input_buffer(input_buffer* input);
 
 meta_command_result execute_meta_command(input_buffer* input);
-statement_prepare_result prepare_statement(database_connection_* database_connection, input_buffer* input, statement_* statement);
+statement_prepare_result prepare_statement(input_buffer* input, statement_* statement);
 void execute_statement(statement_* statement);
 
 int compare(char* a, char* b, int n);
