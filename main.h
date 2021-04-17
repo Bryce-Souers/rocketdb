@@ -4,8 +4,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <errno.h>
 
-#define APP_NAME "rocketdb"
+#define APP_NAME "rocket"
 
 typedef enum {
 	META_COMMAND_SUCCESS,
@@ -34,8 +38,20 @@ typedef struct {
 
 typedef struct {
 	statement_type type;
+
 	char* database_name;
+	int database_name_length;
+	char* database_path;
+	int database_path_length;
+
 	char* group_name;
+	int group_name_length;
+	char* group_path;
+	int group_path_length;
+    FILE* group_fp;
+
+    char* data;
+    int data_length;
 } statement_;
 
 input_buffer* init_input_buffer();
@@ -45,6 +61,7 @@ void free_input_buffer(input_buffer* input);
 meta_command_result execute_meta_command(input_buffer* input);
 statement_prepare_result prepare_statement(input_buffer* input, statement_* statement);
 void execute_statement(statement_* statement);
+int create_dirs(statement_* statement);
 
 int compare(char* a, char* b, int n);
 
