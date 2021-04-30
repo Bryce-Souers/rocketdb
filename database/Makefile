@@ -1,5 +1,5 @@
 all:
-	gcc -Wall main.c -o build/rocket_service
+	gcc -Wall main.c -o build/rocket_service -lpthread
 
 run:
 	make all

@@ -3,6 +3,14 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <errno.h>
+#include <unistd.h>
+#include <openssl/sha.h>
+
+#define PORT 3306
 
 typedef enum {
     ROCKET_SUCCESS,
@@ -15,7 +23,10 @@ typedef struct ROCKET {
     char* password;
     char* db;
     unsigned int port;
+    int sock_fd;
+
     unsigned int last_error_code;
+    char error[64];
 } ROCKET;
 
 rocket_result rocket_connect(ROCKET* con, char* host, char* username, char* password, char* db, unsigned int port);
