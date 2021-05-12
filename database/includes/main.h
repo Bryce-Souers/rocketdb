@@ -1,3 +1,5 @@
+
+
 #ifndef DATABASE_MAIN_H
 #define DATABASE_MAIN_H
 
@@ -10,6 +12,7 @@
 #include <string.h>
 #include <errno.h>
 #include <pthread.h>
+#include <sodium.h>
 
 #define APP_NAME "rocket"
 
@@ -18,10 +21,5 @@ char *host_ip;
 int host_port;
 
 void init_socket(int *sock_fd, char* host_ip, int host_port);
-
-typedef struct worker_args {
-
-} worker_args;
-void *worker(void *arg);
 
 #endif

@@ -8,7 +8,7 @@
 #include <arpa/inet.h>
 #include <errno.h>
 #include <unistd.h>
-#include <openssl/sha.h>
+#include <sodium.h>
 
 #define PORT 3306
 
@@ -34,5 +34,7 @@ rocket_result rocket_connect(ROCKET* con, char* host, char* username, char* pass
 const char* rocket_read_error(ROCKET* con);
 void rocket_print_error(ROCKET* con, FILE* fd);
 void rocket_die(ROCKET* con, FILE* fd);
+
+char* sha_256(char* input);
 
 #endif
