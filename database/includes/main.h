@@ -1,5 +1,3 @@
-
-
 #ifndef DATABASE_MAIN_H
 #define DATABASE_MAIN_H
 
@@ -13,13 +11,19 @@
 #include <errno.h>
 #include <pthread.h>
 #include <sodium.h>
+#include <signal.h>
 
 #define APP_NAME "rocket"
-
+#define _DATABASE_PASSWORD "password"
 
 char *host_ip;
 int host_port;
+int server_socket;
 
-void init_socket(int *sock_fd, char* host_ip, int host_port);
+/* FUNCTION DECLARATIONS */
+void handle_arguments(int argc, char **argv);
+void init();
+void clean_up();
+void handle_interrupt();
 
 #endif

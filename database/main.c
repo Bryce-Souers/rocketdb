@@ -1,33 +1,24 @@
 #include "includes/main.h"
 #include "includes/worker.h"
 
-
 int main(int argc, char* argv[]) {
-    // Handle arguments
-    if(argc < 3) {
-        fprintf(stderr, "%s > [ERROR] Usage: %s <host_ip> <host_port>\n", APP_NAME, argv[0]);
-        exit(EXIT_FAILURE);
-    }
-    host_ip = argv[1];
-    host_port = atoi(argv[2]);
-
-    // Initialize database socket
-    int sock_fd;
-    init_socket(&sock_fd, host_ip, host_port);
+    handle_arguments(argc, argv);
+    init();
 
     // Continually accept incoming connections
     for(;;) {
-        // Listen for connections
-        if(listen(sock_fd, 3) == -1) {
+
+        // Set socket to listen
+        if(listen(server_socket, 3) == -1) {
             fprintf(stderr, "%s > [ERROR] %s\n", APP_NAME, strerror(errno));
             exit(EXIT_FAILURE);
         }
+
+        // Block and accept connections
         int client_socket;
         struct sockaddr client_address;
         socklen_t client_address_length = sizeof((struct sockaddr*) &client_address);
-
-        // Block and accept connections
-        if((client_socket = accept(sock_fd, &client_address, &client_address_length)) == -1) {
+        if((client_socket = accept(server_socket, &client_address, &client_address_length)) == -1) {
             fprintf(stderr, "%s > [ERROR] %s\n", APP_NAME, strerror(errno));
             exit(EXIT_FAILURE);
         }
@@ -49,40 +40,31 @@ int main(int argc, char* argv[]) {
             exit(EXIT_FAILURE);
         }
     }
-    close(sock_fd);
+
+    clean_up();
     return 0;
 }
 
-/*void *worker_init(void *arg) {
-    pthread_t worker_id = pthread_self();
-    worker_args* w_args = (worker_args*) arg;
-
-    // Send challenge string
-    void* challenge_string = malloc(32);
-    randombytes_buf(challenge_string, 32);
-    printf("challenge: %s\n", (char*) challenge_string);
-    if(send(w_args->client_socket, challenge_string, 32, 0) == -1) {
-        fprintf(stderr, "%s > [W%d] Failed to send challenge string to client.\n", APP_NAME, (int) worker_id);
+void handle_arguments(int argc, char **argv) {
+    if(argc < 3) {
+        fprintf(stderr, "%s > [ERROR] Usage: %s <host_ip> <host_port>\n", APP_NAME, argv[0]);
         exit(EXIT_FAILURE);
     }
+    host_ip = argv[1];
+    host_port = atoi(argv[2]);
+}
 
-    char buffer[1024] = {0};
-    int num_bytes_read = read(w_args->client_socket, buffer, 1024);
-    printf("recv (%d): ", num_bytes_read);
-    for(int i = 0; i < num_bytes_read; i++) {
-        printf("%x ", buffer[i] & 0xff);
-    }
-    printf("\n");
-    pthread_exit(NULL);
-}*/
+void init() {
+    // Capture SIGINT signal
+    signal(SIGINT, handle_interrupt);
 
-void init_socket(int *sock_fd, char* host_ip, int host_port) {
-    if((*sock_fd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+    // Initialize server socket
+    if((server_socket = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
         fprintf(stderr, "%s > [ERROR] %s\n", APP_NAME, strerror(errno));
         exit(EXIT_FAILURE);
     }
     int opt = 1;
-    if((setsockopt(*sock_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt))) == -1) {
+    if((setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt))) == -1) {
         fprintf(stderr, "%s > [ERROR] %s\n", APP_NAME, strerror(errno));
         exit(EXIT_FAILURE);
     }
@@ -90,8 +72,19 @@ void init_socket(int *sock_fd, char* host_ip, int host_port) {
     address.sin_family = AF_INET;
     address.sin_addr.s_addr = inet_addr(host_ip);
     address.sin_port = htons(host_port);
-    if((bind(*sock_fd, (struct sockaddr*) &address, sizeof(address))) == -1) {
+    if((bind(server_socket, (struct sockaddr*) &address, sizeof(address))) == -1) {
         fprintf(stderr, "%s > [ERROR] %s\n", APP_NAME, strerror(errno));
         exit(EXIT_FAILURE);
     }
+}
+
+void clean_up() {
+    close(server_socket);
+    printf("%s > Cleaned up, goodbye!\n", APP_NAME);
+    exit(EXIT_SUCCESS);
+}
+
+void handle_interrupt() {
+    printf("\n%s > Received SIGINT signal...\n", APP_NAME);
+    clean_up();
 }
